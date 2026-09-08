@@ -78,6 +78,26 @@
   .tab.active.open{border-color:var(--amber); color:var(--amber); background:#FBF2E6;}
   .tab.active.close{border-color:var(--teal); color:var(--teal); background:#EAF2EE;}
 
+  .subtabs{
+    display:flex;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .subtab{
+    flex:1;
+    text-align:center;
+    padding:8px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--card);
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    color:var(--sub);
+  }
+  .subtab.active.sunny{border-color:#E0A72E; color:#B5820F; background:#FBF2E0;}
+  .subtab.active.rainy{border-color:#4A7FB5; color:#3A6690; background:#E9F0F7;}
+
   .card{
     background:var(--card);
     border:1px solid var(--line);
@@ -200,9 +220,17 @@
 
     <div class="card">
       <div class="field">
-        <label>見出し(LINE文章の先頭。複数行OK)</label>
+        <label>見出し(LINE文章の先頭。複数行OK・晴れ/雨共通)</label>
         <textarea id="headerInput"></textarea>
       </div>
+    </div>
+
+    <div class="subtabs">
+      <div class="subtab sunny active" id="subtabSunny" onclick="switchWeather('sunny')">☀ 晴れ</div>
+      <div class="subtab rainy" id="subtabRainy" onclick="switchWeather('rainy')">☂ 雨の可能性あり</div>
+    </div>
+
+    <div class="card">
       <div class="field">
         <label>写真枚数の表記</label>
         <input type="text" id="photoCountInput">
@@ -225,9 +253,19 @@
 <script>
 let DATA = null;
 let currentTab = 'open';
+let currentWeather = 'sunny';
 
 async function init(){
-  DATA = await loadChecklistData();
+  try{
+    DATA = await loadChecklistData();
+  }catch(e){
+    console.error(e);
+    DATA = (typeof DEFAULT_DATA !== 'undefined') ? JSON.parse(JSON.stringify(DEFAULT_DATA)) : null;
+  }
+  if(!DATA){
+    document.getElementById('loading').textContent = '読み込みに失敗しました。config.jsが正しく読み込まれているか確認してください。';
+    return;
+  }
   document.getElementById('loading').style.display = 'none';
   document.getElementById('editorArea').style.display = 'block';
   renderTab();
@@ -236,20 +274,31 @@ init();
 
 function switchTab(tab){
   currentTab = tab;
+  currentWeather = 'sunny';
   document.getElementById('tabOpen').classList.toggle('active', tab === 'open');
   document.getElementById('tabClose').classList.toggle('active', tab === 'close');
+  document.getElementById('subtabSunny').classList.add('active');
+  document.getElementById('subtabRainy').classList.remove('active');
   renderTab();
 }
 
+function switchWeather(weather){
+  currentWeather = weather;
+  document.getElementById('subtabSunny').classList.toggle('active', weather === 'sunny');
+  document.getElementById('subtabRainy').classList.toggle('active', weather === 'rainy');
+  renderItems();
+}
+
 function renderTab(){
-  const data = DATA[currentTab];
-  document.getElementById('headerInput').value = data.header;
-  document.getElementById('photoCountInput').value = data.photoCount;
+  const meta = DATA[currentTab];
+  document.getElementById('headerInput').value = meta.header;
+  document.getElementById('photoCountInput').value = meta.weather[currentWeather].photoCount;
   renderItems();
 }
 
 function renderItems(){
-  const data = DATA[currentTab];
+  const data = DATA[currentTab].weather[currentWeather];
+  document.getElementById('photoCountInput').value = data.photoCount;
   const container = document.getElementById('itemRows');
   container.innerHTML = '';
   data.items.forEach((item, i) => {
@@ -273,7 +322,7 @@ function escapeAttr(str){
 }
 
 function updateItem(i, key, value){
-  const item = DATA[currentTab].items[i];
+  const item = DATA[currentTab].weather[currentWeather].items[i];
   if(key === 'num'){
     item.num = parseInt(value, 10) || 1;
   } else {
@@ -282,7 +331,7 @@ function updateItem(i, key, value){
 }
 
 function moveItem(i, dir){
-  const items = DATA[currentTab].items;
+  const items = DATA[currentTab].weather[currentWeather].items;
   const j = i + dir;
   if(j < 0 || j >= items.length) return;
   [items[i], items[j]] = [items[j], items[i]];
@@ -290,12 +339,12 @@ function moveItem(i, dir){
 }
 
 function removeItem(i){
-  DATA[currentTab].items.splice(i, 1);
+  DATA[currentTab].weather[currentWeather].items.splice(i, 1);
   renderItems();
 }
 
 function addItem(){
-  const items = DATA[currentTab].items;
+  const items = DATA[currentTab].weather[currentWeather].items;
   const lastNum = items.length ? items[items.length - 1].num : 0;
   items.push({ num: lastNum + 1, label: '', detail: '' });
   renderItems();
@@ -303,7 +352,7 @@ function addItem(){
 
 async function save(){
   DATA[currentTab].header = document.getElementById('headerInput').value;
-  DATA[currentTab].photoCount = document.getElementById('photoCountInput').value;
+  DATA[currentTab].weather[currentWeather].photoCount = document.getElementById('photoCountInput').value;
 
   const statusEl = document.getElementById('statusText');
   statusEl.textContent = '保存中...';

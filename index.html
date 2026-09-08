@@ -437,7 +437,10 @@ function buildText(){
   const meta = DATA[currentMode];
   const data = meta.weather[currentWeather];
   const weatherLabel = currentWeather === 'sunny' ? '晴れ' : '雨の可能性あり';
+  const today = new Date();
+  const dateLabel = (today.getMonth()+1) + '/' + today.getDate() + '(' + ['日','月','火','水','木','金','土'][today.getDay()] + ')';
   let lines = [];
+  lines.push(dateLabel);
   lines.push(meta.header);
   lines.push('');
   lines.push('天気:' + weatherLabel);

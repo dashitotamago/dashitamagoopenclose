@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>チェックシート管理</title>
+<style>
+  :root{
+    --bg:#F7F5EF;
+    --card:#FFFFFF;
+    --ink:#2B2B27;
+    --sub:#726F66;
+    --line:#E4E0D4;
+    --teal:#1F4D3D;
+    --teal-dark:#153A2E;
+    --amber:#C98A3E;
+    --danger:#B4453A;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Hiragino Sans","Noto Sans JP",-apple-system,BlinkMacSystemFont,sans-serif;
+    line-height:1.6;
+    padding:0 0 80px;
+  }
+  header{
+    padding:24px 20px 12px;
+    text-align:center;
+  }
+  header h1{
+    font-size:18px;
+    font-weight:700;
+    margin:0 0 4px;
+  }
+  header p{
+    font-size:12px;
+    color:var(--sub);
+    margin:0;
+  }
+  .back-link{
+    display:block;
+    text-align:center;
+    font-size:12px;
+    color:var(--sub);
+    margin-bottom:12px;
+  }
+  .wrap{
+    max-width:560px;
+    margin:0 auto;
+    padding:0 16px;
+  }
+  .loading{
+    text-align:center;
+    color:var(--sub);
+    font-size:13px;
+    padding:40px 0;
+  }
+
+  .tabs{
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:10px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--card);
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    color:var(--sub);
+  }
+  .tab.active.open{border-color:var(--amber); color:var(--amber); background:#FBF2E6;}
+  .tab.active.close{border-color:var(--teal); color:var(--teal); background:#EAF2EE;}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .field{margin-bottom:12px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{
+    display:block;
+    font-size:12px;
+    color:var(--sub);
+    margin-bottom:5px;
+  }
+  .field input, .field textarea{
+    width:100%;
+    padding:9px 10px;
+    font-size:14px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fff;
+    color:var(--ink);
+    font-family:inherit;
+  }
+  .field textarea{resize:vertical; min-height:56px;}
+
+  .item-row{
+    display:grid;
+    grid-template-columns:44px 1fr 1fr auto;
+    gap:6px;
+    align-items:center;
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .item-row:last-child{border-bottom:none;}
+  .item-row input{
+    padding:8px 8px;
+    font-size:13px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    width:100%;
+  }
+  .row-actions{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+  .icon-btn{
+    background:none;
+    border:1px solid var(--line);
+    border-radius:6px;
+    width:26px;
+    height:26px;
+    font-size:12px;
+    cursor:pointer;
+    color:var(--sub);
+    line-height:1;
+  }
+  .icon-btn.danger{color:var(--danger); border-color:var(--danger);}
+
+  .add-btn{
+    width:100%;
+    margin-top:12px;
+    padding:10px;
+    border:1px dashed var(--line);
+    border-radius:8px;
+    background:none;
+    color:var(--teal);
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+  }
+
+  .save-bar{
+    position:sticky;
+    bottom:0;
+    background:var(--bg);
+    padding:14px 0 4px;
+  }
+  .field.key{margin-bottom:10px;}
+  .save-btn{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:12px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    background:var(--teal);
+    color:#fff;
+  }
+  .save-btn:active{background:var(--teal-dark);}
+  .status{
+    text-align:center;
+    font-size:12px;
+    margin-top:8px;
+    min-height:16px;
+  }
+  .status.ok{color:var(--teal);}
+  .status.err{color:var(--danger);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>チェックシート管理</h1>
+  <p>項目の追加・編集・削除</p>
+</header>
+<a class="back-link" href="index.html">← チェックサイトに戻る</a>
+
+<div class="wrap">
+  <div class="loading" id="loading">読み込み中...</div>
+
+  <div id="editorArea" style="display:none;">
+    <div class="tabs">
+      <div class="tab open active" id="tabOpen" onclick="switchTab('open')">オープンチェック</div>
+      <div class="tab close" id="tabClose" onclick="switchTab('close')">クローズチェック</div>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label>見出し(LINE文章の先頭。複数行OK)</label>
+        <textarea id="headerInput"></textarea>
+      </div>
+      <div class="field">
+        <label>写真枚数の表記</label>
+        <input type="text" id="photoCountInput">
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="itemRows"></div>
+      <button class="add-btn" onclick="addItem()">＋ 項目を追加</button>
+    </div>
+
+    <div class="save-bar">
+      <button class="save-btn" onclick="save()">保存する</button>
+      <div class="status" id="statusText"></div>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+let DATA = null;
+let currentTab = 'open';
+
+async function init(){
+  DATA = await loadChecklistData();
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('editorArea').style.display = 'block';
+  renderTab();
+}
+init();
+
+function switchTab(tab){
+  currentTab = tab;
+  document.getElementById('tabOpen').classList.toggle('active', tab === 'open');
+  document.getElementById('tabClose').classList.toggle('active', tab === 'close');
+  renderTab();
+}
+
+function renderTab(){
+  const data = DATA[currentTab];
+  document.getElementById('headerInput').value = data.header;
+  document.getElementById('photoCountInput').value = data.photoCount;
+  renderItems();
+}
+
+function renderItems(){
+  const data = DATA[currentTab];
+  const container = document.getElementById('itemRows');
+  container.innerHTML = '';
+  data.items.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML =
+      '<input type="number" value="' + item.num + '" onchange="updateItem(' + i + ',\'num\',this.value)" title="番号">' +
+      '<input type="text" value="' + escapeAttr(item.label) + '" placeholder="場所・グループ名(任意)" onchange="updateItem(' + i + ',\'label\',this.value)">' +
+      '<input type="text" value="' + escapeAttr(item.detail) + '" placeholder="チェック内容" onchange="updateItem(' + i + ',\'detail\',this.value)">' +
+      '<div class="row-actions">' +
+        '<button class="icon-btn" onclick="moveItem(' + i + ',-1)" title="上へ">↑</button>' +
+        '<button class="icon-btn" onclick="moveItem(' + i + ',1)" title="下へ">↓</button>' +
+        '<button class="icon-btn danger" onclick="removeItem(' + i + ')" title="削除">×</button>' +
+      '</div>';
+    container.appendChild(row);
+  });
+}
+
+function escapeAttr(str){
+  return (str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function updateItem(i, key, value){
+  const item = DATA[currentTab].items[i];
+  if(key === 'num'){
+    item.num = parseInt(value, 10) || 1;
+  } else {
+    item[key] = value;
+  }
+}
+
+function moveItem(i, dir){
+  const items = DATA[currentTab].items;
+  const j = i + dir;
+  if(j < 0 || j >= items.length) return;
+  [items[i], items[j]] = [items[j], items[i]];
+  renderItems();
+}
+
+function removeItem(i){
+  DATA[currentTab].items.splice(i, 1);
+  renderItems();
+}
+
+function addItem(){
+  const items = DATA[currentTab].items;
+  const lastNum = items.length ? items[items.length - 1].num : 0;
+  items.push({ num: lastNum + 1, label: '', detail: '' });
+  renderItems();
+}
+
+async function save(){
+  DATA[currentTab].header = document.getElementById('headerInput').value;
+  DATA[currentTab].photoCount = document.getElementById('photoCountInput').value;
+
+  const statusEl = document.getElementById('statusText');
+  statusEl.textContent = '保存中...';
+  statusEl.className = 'status';
+
+  try{
+    await saveChecklistData(DATA);
+    statusEl.textContent = '保存しました';
+    statusEl.className = 'status ok';
+  }catch(e){
+    statusEl.textContent = e.message || '保存に失敗しました';
+    statusEl.className = 'status err';
+  }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>店舗チェックシート</title>
+<style>
+  :root{
+    --bg:#F7F5EF;
+    --card:#FFFFFF;
+    --ink:#2B2B27;
+    --sub:#726F66;
+    --line:#E4E0D4;
+    --teal:#1F4D3D;
+    --teal-dark:#153A2E;
+    --amber:#C98A3E;
+    --danger:#B4453A;
+    --done:#1F4D3D;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Hiragino Sans","Noto Sans JP",-apple-system,BlinkMacSystemFont,sans-serif;
+    line-height:1.6;
+    padding:0 0 60px;
+    min-height:100vh;
+  }
+  header{
+    padding:28px 20px 12px;
+    text-align:center;
+  }
+  header h1{
+    font-size:19px;
+    font-weight:700;
+    margin:0 0 4px;
+    letter-spacing:.02em;
+  }
+  header p{
+    font-size:12px;
+    color:var(--sub);
+    margin:0;
+  }
+  .admin-link{
+    display:block;
+    text-align:center;
+    font-size:12px;
+    color:var(--sub);
+    margin-bottom:8px;
+  }
+  .wrap{
+    max-width:480px;
+    margin:0 auto;
+    padding:0 16px;
+  }
+  .loading{
+    text-align:center;
+    color:var(--sub);
+    font-size:13px;
+    padding:40px 0;
+  }
+
+  .select-screen{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    margin-top:16px;
+  }
+  .mode-btn{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px 20px;
+    cursor:pointer;
+    transition:border-color .15s, transform .1s;
+    text-align:left;
+  }
+  .mode-btn:active{transform:scale(.98);}
+  .mode-btn.open{border-left:4px solid var(--amber);}
+  .mode-btn.close{border-left:4px solid var(--teal);}
+  .mode-btn .label{
+    font-size:17px;
+    font-weight:700;
+  }
+  .mode-btn .desc{
+    font-size:12px;
+    color:var(--sub);
+    margin-top:3px;
+  }
+  .mode-btn .arrow{
+    font-size:20px;
+    color:var(--sub);
+  }
+
+  .check-screen{display:none;}
+  .check-screen.active{display:block;}
+  .select-screen.hidden{display:none;}
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:18px 0 14px;
+  }
+  .back-btn{
+    background:none;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 12px;
+    font-size:13px;
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .mode-title{
+    font-size:16px;
+    font-weight:700;
+    flex:1;
+  }
+  .mode-title.open-color{color:var(--amber);}
+  .mode-title.close-color{color:var(--teal);}
+
+  .progress{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .progress-bar{
+    flex:1;
+    height:6px;
+    background:var(--line);
+    border-radius:3px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--teal);
+    width:0%;
+    transition:width .2s;
+  }
+  .progress-num{
+    font-size:12px;
+    color:var(--sub);
+    white-space:nowrap;
+    min-width:44px;
+    text-align:right;
+  }
+
+  .item{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 14px;
+    margin-bottom:8px;
+    cursor:pointer;
+  }
+  .item.checked{
+    border-color:var(--done);
+    background:#EEF4EF;
+  }
+  .checkbox{
+    flex-shrink:0;
+    width:22px;
+    height:22px;
+    border-radius:6px;
+    border:2px solid #B9B6AA;
+    margin-top:1px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:all .12s;
+  }
+  .item.checked .checkbox{
+    background:var(--done);
+    border-color:var(--done);
+  }
+  .checkbox svg{
+    width:14px;
+    height:14px;
+    opacity:0;
+    transition:opacity .12s;
+  }
+  .item.checked .checkbox svg{opacity:1;}
+  .item-text{
+    font-size:14px;
+    padding-top:1px;
+  }
+  .item-num{
+    color:var(--sub);
+    margin-right:1px;
+  }
+
+  .copy-btn{
+    width:100%;
+    margin-top:18px;
+    padding:15px;
+    border:none;
+    border-radius:12px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    transition:background .15s, opacity .15s;
+    color:#fff;
+  }
+  .copy-btn.enabled{background:var(--teal);}
+  .copy-btn.enabled:active{background:var(--teal-dark);}
+  .copy-btn.disabled{
+    background:#C9C6BA;
+    cursor:not-allowed;
+  }
+  .hint{
+    text-align:center;
+    font-size:12px;
+    color:var(--sub);
+    margin-top:10px;
+  }
+  .hint.warn{color:var(--danger);}
+
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:30px;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--ink);
+    color:#fff;
+    padding:12px 20px;
+    border-radius:10px;
+    font-size:13px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s, transform .2s;
+    white-space:nowrap;
+  }
+  .toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>店舗チェックシート</h1>
+  <p>写真チェック項目 / LINE報告用</p>
+</header>
+<a class="admin-link" href="admin.html">項目を編集する(管理サイト)</a>
+
+<div class="wrap">
+
+  <div class="loading" id="loading">読み込み中...</div>
+
+  <div class="select-screen hidden" id="selectScreen">
+    <div class="mode-btn open" onclick="showCheck('open')">
+      <div>
+        <div class="label" id="openLabel">オープンチェック</div>
+        <div class="desc" id="openDesc"></div>
+      </div>
+      <div class="arrow">›</div>
+    </div>
+    <div class="mode-btn close" onclick="showCheck('close')">
+      <div>
+        <div class="label" id="closeLabel">クローズチェック</div>
+        <div class="desc" id="closeDesc"></div>
+      </div>
+      <div class="arrow">›</div>
+    </div>
+  </div>
+
+  <div class="check-screen" id="checkScreen">
+    <div class="topbar">
+      <button class="back-btn" onclick="showSelect()">← 戻る</button>
+      <div class="mode-title" id="modeTitle"></div>
+    </div>
+
+    <div class="progress">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-num" id="progressNum">0/0</div>
+    </div>
+
+    <div id="itemList"></div>
+
+    <button class="copy-btn disabled" id="copyBtn" onclick="doCopy()">コピー</button>
+    <div class="hint warn" id="hintText">未チェックの項目があります</div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">LINEにコピーしました</div>
+
+<script src="config.js"></script>
+<script>
+let DATA = null;
+let currentMode = null;
+let checkedState = {};
+
+async function init(){
+  DATA = await loadChecklistData();
+  document.getElementById('openDesc').textContent = DATA.open.photoCount;
+  document.getElementById('closeDesc').textContent = DATA.close.photoCount;
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('selectScreen').classList.remove('hidden');
+}
+init();
+
+function showSelect(){
+  document.getElementById('selectScreen').classList.remove('hidden');
+  document.getElementById('checkScreen').classList.remove('active');
+  currentMode = null;
+}
+
+function showCheck(mode){
+  currentMode = mode;
+  checkedState = {};
+  const data = DATA[mode];
+
+  document.getElementById('selectScreen').classList.add('hidden');
+  document.getElementById('checkScreen').classList.add('active');
+
+  const titleEl = document.getElementById('modeTitle');
+  titleEl.textContent = data.title;
+  titleEl.className = 'mode-title ' + (mode === 'open' ? 'open-color' : 'close-color');
+
+  const list = document.getElementById('itemList');
+  list.innerHTML = '';
+  data.items.forEach((item, i) => {
+    checkedState[i] = false;
+    const displayText = item.label ? (item.label + ' ' + item.detail) : item.detail;
+    const el = document.createElement('div');
+    el.className = 'item';
+    el.id = 'item-' + i;
+    el.onclick = () => toggleItem(i);
+    el.innerHTML =
+      '<div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>' +
+      '<div class="item-text"><span class="item-num">' + item.num + '.</span>' + displayText + '</div>';
+    list.appendChild(el);
+  });
+
+  updateProgress();
+}
+
+function toggleItem(i){
+  checkedState[i] = !checkedState[i];
+  const el = document.getElementById('item-' + i);
+  el.classList.toggle('checked', checkedState[i]);
+  updateProgress();
+}
+
+function updateProgress(){
+  const total = Object.keys(checkedState).length;
+  const done = Object.values(checkedState).filter(Boolean).length;
+  document.getElementById('progressNum').textContent = done + '/' + total;
+  document.getElementById('progressFill').style.width = (total ? (done/total*100) : 0) + '%';
+
+  const btn = document.getElementById('copyBtn');
+  const hint = document.getElementById('hintText');
+  const allChecked = total > 0 && done === total;
+
+  if(allChecked){
+    btn.className = 'copy-btn enabled';
+    hint.textContent = 'タップしてLINEにコピー';
+    hint.classList.remove('warn');
+  } else {
+    btn.className = 'copy-btn disabled';
+    hint.textContent = '未チェックの項目があります(' + (total-done) + '件)';
+    hint.classList.add('warn');
+  }
+}
+
+function buildText(){
+  const data = DATA[currentMode];
+  let lines = [];
+  lines.push(data.header);
+  lines.push('');
+  lines.push('写真枚数:' + data.photoCount);
+  lines.push('');
+
+  const groups = [];
+  const groupMap = {};
+  data.items.forEach(item => {
+    if(!groupMap[item.num]){
+      groupMap[item.num] = { num:item.num, label:item.label, details:[] };
+      groups.push(groupMap[item.num]);
+    }
+    groupMap[item.num].details.push(item.detail);
+  });
+
+  groups.forEach(g => {
+    if(g.label){
+      lines.push(g.num + '.' + g.label);
+      g.details.forEach(d => lines.push('・' + d));
+    } else if(g.details.length === 1){
+      lines.push(g.num + '.' + g.details[0]);
+    } else {
+      lines.push(g.num + '.');
+      g.details.forEach(d => lines.push('・' + d));
+    }
+  });
+
+  lines.push('');
+  lines.push('写真と文章に書かれた内容を照らし合わせ、確認ができる状態になっている事も含めて、問題がないことを確認しました。');
+  return lines.join('\n');
+}
+
+function doCopy(){
+  const total = Object.keys(checkedState).length;
+  const done = Object.values(checkedState).filter(Boolean).length;
+  if(done !== total || total === 0) return;
+
+  const text = buildText();
+  const showToast = () => {
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  };
+
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(showToast).catch(() => fallbackCopy(text, showToast));
+  } else {
+    fallbackCopy(text, showToast);
+  }
+}
+
+function fallbackCopy(text, cb){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); cb(); } catch(e){}
+  document.body.removeChild(ta);
+}
+</script>
+
+</body>
+</html>

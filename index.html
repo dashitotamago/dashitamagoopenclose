@@ -99,6 +99,25 @@
   .check-screen{display:none;}
   .check-screen.active{display:block;}
   .select-screen.hidden{display:none;}
+  .weather-screen{display:none;}
+  .weather-screen.active{display:block;}
+  .weather-screen .topbar{margin-top:16px;}
+  .weather-btn{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px 20px;
+    cursor:pointer;
+    margin-bottom:12px;
+    text-align:left;
+  }
+  .weather-btn:active{transform:scale(.98);}
+  .weather-btn.sunny{border-left:4px solid #E0A72E;}
+  .weather-btn.rainy{border-left:4px solid #4A7FB5;}
+  .weather-btn .label{font-size:16px; font-weight:700;}
 
   .topbar{
     display:flex;
@@ -257,14 +276,14 @@
   <div class="loading" id="loading">読み込み中...</div>
 
   <div class="select-screen hidden" id="selectScreen">
-    <div class="mode-btn open" onclick="showCheck('open')">
+    <div class="mode-btn open" onclick="showWeatherScreen('open')">
       <div>
         <div class="label" id="openLabel">オープンチェック</div>
         <div class="desc" id="openDesc"></div>
       </div>
       <div class="arrow">›</div>
     </div>
-    <div class="mode-btn close" onclick="showCheck('close')">
+    <div class="mode-btn close" onclick="showWeatherScreen('close')">
       <div>
         <div class="label" id="closeLabel">クローズチェック</div>
         <div class="desc" id="closeDesc"></div>
@@ -273,9 +292,24 @@
     </div>
   </div>
 
-  <div class="check-screen" id="checkScreen">
+  <div class="weather-screen" id="weatherScreen">
     <div class="topbar">
       <button class="back-btn" onclick="showSelect()">← 戻る</button>
+      <div class="mode-title" id="weatherModeTitle"></div>
+    </div>
+    <div class="weather-btn sunny" onclick="selectWeather('sunny')">
+      <div class="label">☀ 晴れ</div>
+      <div class="arrow">›</div>
+    </div>
+    <div class="weather-btn rainy" onclick="selectWeather('rainy')">
+      <div class="label">☂ 雨の可能性あり</div>
+      <div class="arrow">›</div>
+    </div>
+  </div>
+
+  <div class="check-screen" id="checkScreen">
+    <div class="topbar">
+      <button class="back-btn" onclick="showWeatherScreen()">← 戻る</button>
       <div class="mode-title" id="modeTitle"></div>
     </div>
 
@@ -298,12 +332,22 @@
 <script>
 let DATA = null;
 let currentMode = null;
+let currentWeather = null;
 let checkedState = {};
 
 async function init(){
-  DATA = await loadChecklistData();
-  document.getElementById('openDesc').textContent = DATA.open.photoCount;
-  document.getElementById('closeDesc').textContent = DATA.close.photoCount;
+  try{
+    DATA = await loadChecklistData();
+  }catch(e){
+    console.error(e);
+    DATA = (typeof DEFAULT_DATA !== 'undefined') ? JSON.parse(JSON.stringify(DEFAULT_DATA)) : null;
+  }
+  if(!DATA){
+    document.getElementById('loading').textContent = '読み込みに失敗しました。config.jsが正しく読み込まれているか確認してください。';
+    return;
+  }
+  document.getElementById('openDesc').textContent = '10:45まで';
+  document.getElementById('closeDesc').textContent = '天気を選んでチェック';
   document.getElementById('loading').style.display = 'none';
   document.getElementById('selectScreen').classList.remove('hidden');
 }
@@ -311,21 +355,37 @@ init();
 
 function showSelect(){
   document.getElementById('selectScreen').classList.remove('hidden');
+  document.getElementById('weatherScreen').classList.remove('active');
   document.getElementById('checkScreen').classList.remove('active');
   currentMode = null;
+  currentWeather = null;
 }
 
-function showCheck(mode){
-  currentMode = mode;
-  checkedState = {};
-  const data = DATA[mode];
-
+function showWeatherScreen(mode){
+  if(mode) currentMode = mode;
   document.getElementById('selectScreen').classList.add('hidden');
+  document.getElementById('checkScreen').classList.remove('active');
+  document.getElementById('weatherScreen').classList.add('active');
+  document.getElementById('weatherModeTitle').textContent = DATA[currentMode].title;
+}
+
+function selectWeather(weather){
+  currentWeather = weather;
+  document.getElementById('weatherScreen').classList.remove('active');
+  showCheck();
+}
+
+function showCheck(){
+  checkedState = {};
+  const meta = DATA[currentMode];
+  const data = meta.weather[currentWeather];
+
   document.getElementById('checkScreen').classList.add('active');
 
   const titleEl = document.getElementById('modeTitle');
-  titleEl.textContent = data.title;
-  titleEl.className = 'mode-title ' + (mode === 'open' ? 'open-color' : 'close-color');
+  const weatherLabel = currentWeather === 'sunny' ? '☀ 晴れ' : '☂ 雨の可能性あり';
+  titleEl.textContent = meta.title + '(' + weatherLabel + ')';
+  titleEl.className = 'mode-title ' + (currentMode === 'open' ? 'open-color' : 'close-color');
 
   const list = document.getElementById('itemList');
   list.innerHTML = '';
@@ -374,10 +434,13 @@ function updateProgress(){
 }
 
 function buildText(){
-  const data = DATA[currentMode];
+  const meta = DATA[currentMode];
+  const data = meta.weather[currentWeather];
+  const weatherLabel = currentWeather === 'sunny' ? '晴れ' : '雨の可能性あり';
   let lines = [];
-  lines.push(data.header);
+  lines.push(meta.header);
   lines.push('');
+  lines.push('天気:' + weatherLabel);
   lines.push('写真枚数:' + data.photoCount);
   lines.push('');
 

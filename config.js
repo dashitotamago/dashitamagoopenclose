@@ -3,56 +3,111 @@
 const GAS_URL = "https://script.google.com/macros/s/AKfycbwyByrORo1m-1bdjaFMcx1WUG8k0ARZfFDBShO8pYapUI3WnHCpr6M6BlJXamZrRmYZ/exec";
 
 // デフォルトデータ(GASが未設定・通信エラー時のフォールバックとして使用)
+// 各カテゴリ(open/close)は、晴れ用(sunny)と雨の可能性あり用(rainy)の2パターンを持つ
 const DEFAULT_DATA = {
   open: {
     title: "オープンチェック",
     header: "オープンチェック写真\n10時45分まで",
-    photoCount: "計9枚",
-    items: [
-      {num:1, label:"石水窯横", detail:"ポスター看板2"},
-      {num:2, label:"石水窯庭", detail:"うなぎ看板"},
-      {num:2, label:"石水窯庭", detail:"のぼり旗"},
-      {num:3, label:"坂前", detail:"看板2"},
-      {num:3, label:"坂前", detail:"のぼり旗2"},
-      {num:4, label:"店頭", detail:"A1メニュー表"},
-      {num:4, label:"店頭", detail:"窓枠外し"},
-      {num:4, label:"店頭", detail:"まな板"},
-      {num:4, label:"店頭", detail:"ライト点灯"},
-      {num:4, label:"店頭", detail:"スピーカー"},
-      {num:4, label:"店頭", detail:"油"},
-      {num:5, label:"通路", detail:"電気"},
-      {num:5, label:"通路", detail:"お盆台"},
-      {num:5, label:"通路", detail:"ゴミ箱蓋開ける"},
-      {num:5, label:"通路", detail:"通路扉開く"},
-      {num:6, label:"反対側道", detail:"起立式看板"},
-      {num:7, label:"イートインスペース", detail:"机・イスが綺麗に並んでいるか"},
-      {num:7, label:"イートインスペース", detail:"照明が付いているか"},
-      {num:8, label:"", detail:"iPad Bluetooth接続確認"},
-      {num:9, label:"", detail:"インスタストーリー投稿確認"}
-    ]
+    weather: {
+      sunny: {
+        photoCount: "計9枚",
+        items: [
+          {num:1, label:"石水窯横", detail:"ポスター看板2"},
+          {num:2, label:"石水窯庭", detail:"うなぎ看板"},
+          {num:2, label:"石水窯庭", detail:"のぼり旗"},
+          {num:3, label:"坂前", detail:"看板2"},
+          {num:3, label:"坂前", detail:"のぼり旗2"},
+          {num:4, label:"店頭", detail:"A1メニュー表"},
+          {num:4, label:"店頭", detail:"窓枠外し"},
+          {num:4, label:"店頭", detail:"まな板"},
+          {num:4, label:"店頭", detail:"ライト点灯"},
+          {num:4, label:"店頭", detail:"スピーカー"},
+          {num:4, label:"店頭", detail:"油"},
+          {num:5, label:"通路", detail:"電気"},
+          {num:5, label:"通路", detail:"お盆台"},
+          {num:5, label:"通路", detail:"ゴミ箱蓋開ける"},
+          {num:5, label:"通路", detail:"通路扉開く"},
+          {num:6, label:"反対側道", detail:"起立式看板"},
+          {num:7, label:"イートインスペース", detail:"机・イスが綺麗に並んでいるか"},
+          {num:7, label:"イートインスペース", detail:"照明が付いているか"},
+          {num:8, label:"", detail:"iPad Bluetooth接続確認"},
+          {num:9, label:"", detail:"インスタストーリー投稿確認"}
+        ]
+      },
+      rainy: {
+        photoCount: "計9枚",
+        items: [
+          {num:1, label:"石水窯横", detail:"ポスター看板2"},
+          {num:2, label:"石水窯庭", detail:"うなぎ看板"},
+          {num:2, label:"石水窯庭", detail:"のぼり旗"},
+          {num:3, label:"坂前", detail:"看板2"},
+          {num:3, label:"坂前", detail:"のぼり旗2"},
+          {num:4, label:"店頭", detail:"A1メニュー表"},
+          {num:4, label:"店頭", detail:"窓枠外し"},
+          {num:4, label:"店頭", detail:"まな板"},
+          {num:4, label:"店頭", detail:"ライト点灯"},
+          {num:4, label:"店頭", detail:"スピーカー"},
+          {num:4, label:"店頭", detail:"油"},
+          {num:5, label:"通路", detail:"電気"},
+          {num:5, label:"通路", detail:"お盆台"},
+          {num:5, label:"通路", detail:"ゴミ箱蓋開ける"},
+          {num:5, label:"通路", detail:"通路扉開く"},
+          {num:6, label:"反対側道", detail:"起立式看板"},
+          {num:7, label:"イートインスペース", detail:"机・イスが綺麗に並んでいるか"},
+          {num:7, label:"イートインスペース", detail:"照明が付いているか"},
+          {num:8, label:"", detail:"iPad Bluetooth接続確認"},
+          {num:9, label:"", detail:"インスタストーリー投稿確認"}
+        ]
+      }
+    }
   },
   close: {
     title: "クローズチェック",
     header: "クローズチェック写真",
-    photoCount: "計8枚(雨天時は一部枚数変動あり)",
-    items: [
-      {num:1, label:"", detail:"ポスター看板×5(雨天時は8枚)"},
-      {num:2, label:"", detail:"のぼり旗×5(雨天時は6)"},
-      {num:2, label:"", detail:"起立式看板"},
-      {num:3, label:"", detail:"窓施錠×2"},
-      {num:3, label:"", detail:"元栓×2"},
-      {num:3, label:"", detail:"机の上綺麗"},
-      {num:3, label:"", detail:"パン在庫確認"},
-      {num:3, label:"", detail:"電気消灯"},
-      {num:4, label:"", detail:"客席綺麗か"},
-      {num:4, label:"", detail:"電気消灯"},
-      {num:5, label:"", detail:"金庫ロック確認"},
-      {num:6, label:"", detail:"エアコン消す"},
-      {num:7, label:"", detail:"牛乳瓶外出し(木曜、日曜のみ)"},
-      {num:8, label:"", detail:"鍵施錠"},
-      {num:8, label:"", detail:"ゴミ箱蓋"},
-      {num:8, label:"", detail:"通路電気消灯"}
-    ]
+    weather: {
+      sunny: {
+        photoCount: "計8枚",
+        items: [
+          {num:1, label:"", detail:"ポスター看板×5"},
+          {num:2, label:"", detail:"のぼり旗×5"},
+          {num:2, label:"", detail:"起立式看板"},
+          {num:3, label:"", detail:"窓施錠×2"},
+          {num:3, label:"", detail:"元栓×2"},
+          {num:3, label:"", detail:"机の上綺麗"},
+          {num:3, label:"", detail:"パン在庫確認"},
+          {num:3, label:"", detail:"電気消灯"},
+          {num:4, label:"", detail:"客席綺麗か"},
+          {num:4, label:"", detail:"電気消灯"},
+          {num:5, label:"", detail:"金庫ロック確認"},
+          {num:6, label:"", detail:"エアコン消す"},
+          {num:7, label:"", detail:"牛乳瓶外出し(木曜、日曜のみ)"},
+          {num:8, label:"", detail:"鍵施錠"},
+          {num:8, label:"", detail:"ゴミ箱蓋"},
+          {num:8, label:"", detail:"通路電気消灯"}
+        ]
+      },
+      rainy: {
+        photoCount: "計8枚",
+        items: [
+          {num:1, label:"", detail:"ポスター看板×8"},
+          {num:2, label:"", detail:"のぼり旗×6"},
+          {num:2, label:"", detail:"起立式看板"},
+          {num:3, label:"", detail:"窓施錠×2"},
+          {num:3, label:"", detail:"元栓×2"},
+          {num:3, label:"", detail:"机の上綺麗"},
+          {num:3, label:"", detail:"パン在庫確認"},
+          {num:3, label:"", detail:"電気消灯"},
+          {num:4, label:"", detail:"客席綺麗か"},
+          {num:4, label:"", detail:"電気消灯"},
+          {num:5, label:"", detail:"金庫ロック確認"},
+          {num:6, label:"", detail:"エアコン消す"},
+          {num:7, label:"", detail:"牛乳瓶外出し(木曜、日曜のみ)"},
+          {num:8, label:"", detail:"鍵施錠"},
+          {num:8, label:"", detail:"ゴミ箱蓋"},
+          {num:8, label:"", detail:"通路電気消灯"}
+        ]
+      }
+    }
   }
 };
 

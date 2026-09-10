@@ -378,7 +378,7 @@ function switchWeather(weather){
 function updateSyncButtonLabel(){
   const from = currentWeather === 'sunny' ? '晴れ' : '雨の可能性あり';
   const to = currentWeather === 'sunny' ? '雨の可能性あり' : '晴れ';
-  document.getElementById('syncPhotoBtn').textContent = '📷 内容が同じ項目だけ、' + from + 'の写真を' + to + 'にコピー';
+  document.getElementById('syncPhotoBtn').textContent = '📷 ' + from + 'の写真を' + to + 'にも全く同じようにコピー';
 }
 
 function renderTab(){
@@ -463,31 +463,26 @@ function removePhoto(i){
   document.getElementById('uploadLabel-' + i).firstChild.textContent = '＋ 写真を追加';
 }
 
-// 現在表示中の天気の写真を、内容(場所・グループ名／チェック内容)が完全に同じ項目にだけコピーする
+// 現在表示中の天気の写真を、番号や文章が違っていても、もう片方の天気の同じ順番の項目にすべて強制コピーする
 function copyPhotosToOtherWeather(){
   const other = currentWeather === 'sunny' ? 'rainy' : 'sunny';
   const fromLabel = currentWeather === 'sunny' ? '晴れ' : '雨の可能性あり';
   const toLabel = other === 'sunny' ? '晴れ' : '雨の可能性あり';
 
   const ok = confirm(
-    fromLabel + 'の写真のうち、内容(場所・グループ名／チェック内容)が' + toLabel + '側と完全に一致する項目にだけコピーします。\n' +
-    '一致した項目は上書きされます。よろしいですか?'
+    fromLabel + 'の写真を、番号や文章が違っていても、' + toLabel + '側の同じ順番の項目にすべてコピーします。\n' +
+    toLabel + '側にすでに設定されている写真は上書きされます。よろしいですか?'
   );
   if(!ok) return;
 
   const currentItems = DATA[currentTab].weather[currentWeather].items;
   const otherItems = DATA[currentTab].weather[other].items;
   const len = Math.min(currentItems.length, otherItems.length);
-  let count = 0;
   for(let i = 0; i < len; i++){
-    const c = currentItems[i], o = otherItems[i];
-    if(c.label === o.label && c.detail === o.detail && c.photo){
-      o.photo = c.photo;
-      count++;
-    }
+    otherItems[i].photo = currentItems[i].photo || '';
   }
 
-  alert(count + '件コピーしました。画面下部の「保存する」を押すと反映されます。');
+  alert('コピーしました。画面下部の「保存する」を押すと反映されます。');
 }
 
 function escapeAttr(str){

@@ -170,13 +170,33 @@
     align-items:center;
     margin-top:6px;
   }
-  .photo-row input{
-    flex:1;
-    padding:8px 8px;
-    font-size:12px;
-    border:1px solid var(--line);
-    border-radius:7px;
+  .photo-row input[type="file"]{
+    display:none;
   }
+  .photo-upload-btn{
+    flex:1;
+    padding:8px 10px;
+    font-size:12px;
+    border:1px dashed var(--line);
+    border-radius:7px;
+    background:none;
+    color:var(--sub);
+    cursor:pointer;
+    text-align:center;
+  }
+  .photo-remove-btn{
+    background:none;
+    border:1px solid var(--line);
+    border-radius:6px;
+    width:26px;
+    height:26px;
+    font-size:12px;
+    cursor:pointer;
+    color:var(--danger);
+    flex-shrink:0;
+    display:none;
+  }
+  .photo-remove-btn.show{display:block;}
   .photo-preview{
     width:40px;
     height:40px;
@@ -348,20 +368,44 @@ function renderItems(){
       '</div>' +
       '<div class="photo-row">' +
         '<img class="photo-preview ' + previewShow + '" id="preview-' + i + '" src="' + photoVal + '">' +
-        '<input type="text" value="' + photoVal + '" placeholder="参考写真のURL(任意)" oninput="updatePhoto(' + i + ',this.value)">' +
+        '<label class="photo-upload-btn" id="uploadLabel-' + i + '">' +
+          (item.photo ? '写真を変更' : '＋ 写真を追加') +
+          '<input type="file" accept="image/*" onchange="handlePhotoSelect(' + i + ',this)">' +
+        '</label>' +
+        '<button class="photo-remove-btn ' + previewShow + '" id="removeBtn-' + i + '" onclick="removePhoto(' + i + ')" title="写真を削除">×</button>' +
       '</div>';
     container.appendChild(block);
   });
 }
 
-function updatePhoto(i, value){
-  const item = DATA[currentTab].weather[currentWeather].items[i];
-  item.photo = value;
-  const preview = document.getElementById('preview-' + i);
-  if(preview){
-    preview.src = value;
-    preview.classList.toggle('show', !!value);
+async function handlePhotoSelect(i, inputEl){
+  const file = inputEl.files && inputEl.files[0];
+  if(!file) return;
+  const label = document.getElementById('uploadLabel-' + i);
+  const originalText = label.firstChild.textContent;
+  label.firstChild.textContent = 'アップロード中...';
+  try{
+    const url = await uploadPhoto(file);
+    DATA[currentTab].weather[currentWeather].items[i].photo = url;
+    const preview = document.getElementById('preview-' + i);
+    preview.src = url;
+    preview.classList.add('show');
+    document.getElementById('removeBtn-' + i).classList.add('show');
+    label.firstChild.textContent = '写真を変更';
+  }catch(e){
+    alert(e.message || 'アップロードに失敗しました');
+    label.firstChild.textContent = originalText;
   }
+  inputEl.value = '';
+}
+
+function removePhoto(i){
+  DATA[currentTab].weather[currentWeather].items[i].photo = '';
+  const preview = document.getElementById('preview-' + i);
+  preview.classList.remove('show');
+  preview.src = '';
+  document.getElementById('removeBtn-' + i).classList.remove('show');
+  document.getElementById('uploadLabel-' + i).firstChild.textContent = '＋ 写真を追加';
 }
 
 function escapeAttr(str){

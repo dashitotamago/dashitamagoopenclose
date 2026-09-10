@@ -315,11 +315,28 @@ async function init(){
     document.getElementById('loading').textContent = '読み込みに失敗しました。config.jsが正しく読み込まれているか確認してください。';
     return;
   }
+  syncIdenticalPhotos();
   document.getElementById('loading').style.display = 'none';
   document.getElementById('editorArea').style.display = 'block';
   renderTab();
 }
 init();
+
+// 晴れ・雨の内容(場所・グループ名／チェック内容)が同じ項目同士は、写真を同一のものにする
+function syncIdenticalPhotos(){
+  ['open', 'close'].forEach(cat => {
+    const sunnyItems = DATA[cat].weather.sunny.items;
+    const rainyItems = DATA[cat].weather.rainy.items;
+    const len = Math.min(sunnyItems.length, rainyItems.length);
+    for(let i = 0; i < len; i++){
+      const s = sunnyItems[i], r = rainyItems[i];
+      if(s.label === r.label && s.detail === r.detail){
+        if(s.photo && !r.photo) r.photo = s.photo;
+        else if(r.photo && !s.photo) s.photo = r.photo;
+      }
+    }
+  });
+}
 
 function switchTab(tab){
   currentTab = tab;
@@ -387,6 +404,7 @@ async function handlePhotoSelect(i, inputEl){
   try{
     const url = await uploadPhoto(file);
     DATA[currentTab].weather[currentWeather].items[i].photo = url;
+    syncIdenticalPhotos();
     const preview = document.getElementById('preview-' + i);
     preview.src = url;
     preview.classList.add('show');
@@ -400,7 +418,17 @@ async function handlePhotoSelect(i, inputEl){
 }
 
 function removePhoto(i){
-  DATA[currentTab].weather[currentWeather].items[i].photo = '';
+  const item = DATA[currentTab].weather[currentWeather].items[i];
+  item.photo = '';
+
+  // 内容が同じ相方(晴れ⇔雨)の写真も一緒に削除する
+  const otherWeather = currentWeather === 'sunny' ? 'rainy' : 'sunny';
+  const otherItems = DATA[currentTab].weather[otherWeather].items;
+  const other = otherItems[i];
+  if(other && other.label === item.label && other.detail === item.detail){
+    other.photo = '';
+  }
+
   const preview = document.getElementById('preview-' + i);
   preview.classList.remove('show');
   preview.src = '';
@@ -418,6 +446,7 @@ function updateItem(i, key, value){
     item.num = parseInt(value, 10) || 1;
   } else {
     item[key] = value;
+    if(key === 'label' || key === 'detail') syncIdenticalPhotos();
   }
 }
 

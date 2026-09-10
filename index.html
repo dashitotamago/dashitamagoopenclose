@@ -215,6 +215,17 @@
     color:var(--sub);
     margin-right:1px;
   }
+  .item-photo{
+    margin:-2px 0 10px;
+  }
+  .item-photo img{
+    width:100%;
+    max-height:220px;
+    object-fit:cover;
+    border-radius:10px;
+    border:1px solid var(--line);
+    display:block;
+  }
 
   .copy-btn{
     width:100%;
@@ -400,6 +411,18 @@ function showCheck(){
       '<div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>' +
       '<div class="item-text"><span class="item-num">' + item.num + '.</span>' + displayText + '</div>';
     list.appendChild(el);
+
+    if(item.photo){
+      const photoDiv = document.createElement('div');
+      photoDiv.className = 'item-photo';
+      const img = document.createElement('img');
+      img.src = item.photo;
+      img.alt = displayText;
+      img.loading = 'lazy';
+      img.onclick = (ev) => { ev.stopPropagation(); window.open(item.photo, '_blank'); };
+      photoDiv.appendChild(img);
+      list.appendChild(photoDiv);
+    }
   });
 
   updateProgress();

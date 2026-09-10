@@ -128,7 +128,32 @@ async function loadChecklistData(){
   }
 }
 
-// GASへチェック項目データを保存。成功時true、失敗時falseを返す。
+// 写真ファイルをGASへアップロードし、保存された画像のURLを返す
+async function uploadPhoto(file){
+  if(!GAS_URL || GAS_URL.indexOf("ここに") === 0){
+    throw new Error("GAS_URLが未設定です。config.jsを編集してください。");
+  }
+  const base64 = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = () => reject(new Error("ファイルの読み込みに失敗しました"));
+    reader.readAsDataURL(file);
+  });
+
+  const res = await fetch(GAS_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({
+      action: "uploadPhoto",
+      filename: file.name,
+      mimeType: file.type,
+      base64: base64
+    })
+  });
+  const json = await res.json();
+  if(!json.ok) throw new Error(json.message || "アップロードに失敗しました");
+  return json.url;
+}
 async function saveChecklistData(data){
   if(!GAS_URL || GAS_URL.indexOf("ここに") === 0){
     throw new Error("GAS_URLが未設定です。config.jsを編集してください。");

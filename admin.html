@@ -159,6 +159,35 @@
   }
   .icon-btn.danger{color:var(--danger); border-color:var(--danger);}
 
+  .item-block{
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .item-block:last-child{border-bottom:none;}
+  .photo-row{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    margin-top:6px;
+  }
+  .photo-row input{
+    flex:1;
+    padding:8px 8px;
+    font-size:12px;
+    border:1px solid var(--line);
+    border-radius:7px;
+  }
+  .photo-preview{
+    width:40px;
+    height:40px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    object-fit:cover;
+    flex-shrink:0;
+    display:none;
+  }
+  .photo-preview.show{display:block;}
+
   .add-btn{
     width:100%;
     margin-top:12px;
@@ -302,19 +331,37 @@ function renderItems(){
   const container = document.getElementById('itemRows');
   container.innerHTML = '';
   data.items.forEach((item, i) => {
-    const row = document.createElement('div');
-    row.className = 'item-row';
-    row.innerHTML =
-      '<input type="number" value="' + item.num + '" onchange="updateItem(' + i + ',\'num\',this.value)" title="番号">' +
-      '<input type="text" value="' + escapeAttr(item.label) + '" placeholder="場所・グループ名(任意)" onchange="updateItem(' + i + ',\'label\',this.value)">' +
-      '<input type="text" value="' + escapeAttr(item.detail) + '" placeholder="チェック内容" onchange="updateItem(' + i + ',\'detail\',this.value)">' +
-      '<div class="row-actions">' +
-        '<button class="icon-btn" onclick="moveItem(' + i + ',-1)" title="上へ">↑</button>' +
-        '<button class="icon-btn" onclick="moveItem(' + i + ',1)" title="下へ">↓</button>' +
-        '<button class="icon-btn danger" onclick="removeItem(' + i + ')" title="削除">×</button>' +
+    const block = document.createElement('div');
+    block.className = 'item-block';
+    const photoVal = escapeAttr(item.photo || '');
+    const previewShow = item.photo ? 'show' : '';
+    block.innerHTML =
+      '<div class="item-row">' +
+        '<input type="number" value="' + item.num + '" onchange="updateItem(' + i + ',\'num\',this.value)" title="番号">' +
+        '<input type="text" value="' + escapeAttr(item.label) + '" placeholder="場所・グループ名(任意)" onchange="updateItem(' + i + ',\'label\',this.value)">' +
+        '<input type="text" value="' + escapeAttr(item.detail) + '" placeholder="チェック内容" onchange="updateItem(' + i + ',\'detail\',this.value)">' +
+        '<div class="row-actions">' +
+          '<button class="icon-btn" onclick="moveItem(' + i + ',-1)" title="上へ">↑</button>' +
+          '<button class="icon-btn" onclick="moveItem(' + i + ',1)" title="下へ">↓</button>' +
+          '<button class="icon-btn danger" onclick="removeItem(' + i + ')" title="削除">×</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="photo-row">' +
+        '<img class="photo-preview ' + previewShow + '" id="preview-' + i + '" src="' + photoVal + '">' +
+        '<input type="text" value="' + photoVal + '" placeholder="参考写真のURL(任意)" oninput="updatePhoto(' + i + ',this.value)">' +
       '</div>';
-    container.appendChild(row);
+    container.appendChild(block);
   });
+}
+
+function updatePhoto(i, value){
+  const item = DATA[currentTab].weather[currentWeather].items[i];
+  item.photo = value;
+  const preview = document.getElementById('preview-' + i);
+  if(preview){
+    preview.src = value;
+    preview.classList.toggle('show', !!value);
+  }
 }
 
 function escapeAttr(str){
@@ -346,7 +393,7 @@ function removeItem(i){
 function addItem(){
   const items = DATA[currentTab].weather[currentWeather].items;
   const lastNum = items.length ? items[items.length - 1].num : 0;
-  items.push({ num: lastNum + 1, label: '', detail: '' });
+  items.push({ num: lastNum + 1, label: '', detail: '', photo: '' });
   renderItems();
 }
 

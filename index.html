@@ -226,6 +226,50 @@
     display:block;
   }
 
+  .final-confirm{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    background:#FFF8E8;
+    border:1px solid #E8D9A8;
+    border-radius:12px;
+    padding:14px 14px;
+    margin-top:14px;
+    cursor:pointer;
+  }
+  .final-confirm.checked{
+    background:#EEF4EF;
+    border-color:var(--done);
+  }
+  .final-confirm .checkbox{
+    flex-shrink:0;
+    width:22px;
+    height:22px;
+    border-radius:6px;
+    border:2px solid #B9B6AA;
+    margin-top:1px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:all .12s;
+  }
+  .final-confirm.checked .checkbox{
+    background:var(--done);
+    border-color:var(--done);
+  }
+  .final-confirm .checkbox svg{
+    width:14px;
+    height:14px;
+    opacity:0;
+    transition:opacity .12s;
+  }
+  .final-confirm.checked .checkbox svg{opacity:1;}
+  .final-confirm-text{
+    font-size:13px;
+    font-weight:700;
+    padding-top:1px;
+  }
+
   .copy-btn{
     width:100%;
     margin-top:18px;
@@ -330,6 +374,16 @@
 
     <div id="itemList"></div>
 
+    <div class="final-confirm" id="finalConfirm1" onclick="toggleFinalConfirm(1)">
+      <div class="checkbox" id="finalCheckbox1"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+      <div class="final-confirm-text">全ての項目の写真を撮影し、LINEに送信しました</div>
+    </div>
+
+    <div class="final-confirm" id="finalConfirm2" onclick="toggleFinalConfirm(2)">
+      <div class="checkbox" id="finalCheckbox2"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+      <div class="final-confirm-text">チェックポイントが写真にきちんと写っていることを確認しました</div>
+    </div>
+
     <button class="copy-btn disabled" id="copyBtn" onclick="doCopy()">コピー</button>
     <div class="hint warn" id="hintText">未チェックの項目があります</div>
   </div>
@@ -344,6 +398,8 @@ let DATA = null;
 let currentMode = null;
 let currentWeather = null;
 let checkedState = {};
+let finalConfirmed1 = false;
+let finalConfirmed2 = false;
 
 async function init(){
   try{
@@ -387,6 +443,10 @@ function selectWeather(weather){
 
 function showCheck(){
   checkedState = {};
+  finalConfirmed1 = false;
+  finalConfirmed2 = false;
+  document.getElementById('finalConfirm1').classList.remove('checked');
+  document.getElementById('finalConfirm2').classList.remove('checked');
   const meta = DATA[currentMode];
   const data = meta.weather[currentWeather];
 
@@ -434,6 +494,17 @@ function toggleItem(i){
   updateProgress();
 }
 
+function toggleFinalConfirm(n){
+  if(n === 1){
+    finalConfirmed1 = !finalConfirmed1;
+    document.getElementById('finalConfirm1').classList.toggle('checked', finalConfirmed1);
+  } else {
+    finalConfirmed2 = !finalConfirmed2;
+    document.getElementById('finalConfirm2').classList.toggle('checked', finalConfirmed2);
+  }
+  updateProgress();
+}
+
 function updateProgress(){
   const total = Object.keys(checkedState).length;
   const done = Object.values(checkedState).filter(Boolean).length;
@@ -442,15 +513,20 @@ function updateProgress(){
 
   const btn = document.getElementById('copyBtn');
   const hint = document.getElementById('hintText');
-  const allChecked = total > 0 && done === total;
+  const allItemsChecked = total > 0 && done === total;
+  const allChecked = allItemsChecked && finalConfirmed1 && finalConfirmed2;
 
   if(allChecked){
     btn.className = 'copy-btn enabled';
     hint.textContent = 'タップしてLINEにコピー';
     hint.classList.remove('warn');
-  } else {
+  } else if(!allItemsChecked){
     btn.className = 'copy-btn disabled';
     hint.textContent = '未チェックの項目があります(' + (total-done) + '件)';
+    hint.classList.add('warn');
+  } else {
+    btn.className = 'copy-btn disabled';
+    hint.textContent = '下の2つの確認欄にチェックしてください';
     hint.classList.add('warn');
   }
 }
@@ -499,7 +575,7 @@ function buildText(){
 function doCopy(){
   const total = Object.keys(checkedState).length;
   const done = Object.values(checkedState).filter(Boolean).length;
-  if(done !== total || total === 0) return;
+  if(done !== total || total === 0 || !finalConfirmed1 || !finalConfirmed2) return;
 
   const text = buildText();
   const showToast = () => {

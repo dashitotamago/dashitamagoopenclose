@@ -369,7 +369,7 @@
       <div class="arrow">›</div>
     </div>
     <div class="weather-btn rainy" onclick="selectWeather('rainy')">
-      <div class="label">☂ 雨の可能性あり</div>
+      <div class="label" id="rainyLabel">☂ 雨の可能性あり</div>
       <div class="arrow">›</div>
     </div>
   </div>
@@ -440,12 +440,17 @@ function showSelect(){
   currentWeather = null;
 }
 
+function getRainyLabel(mode){
+  return mode === 'open' ? '雨が降っている場合' : '雨の可能性あり';
+}
+
 function showWeatherScreen(mode){
   if(mode) currentMode = mode;
   document.getElementById('selectScreen').classList.add('hidden');
   document.getElementById('checkScreen').classList.remove('active');
   document.getElementById('weatherScreen').classList.add('active');
   document.getElementById('weatherModeTitle').textContent = DATA[currentMode].title;
+  document.getElementById('rainyLabel').textContent = '☂ ' + getRainyLabel(currentMode);
 }
 
 function selectWeather(weather){
@@ -466,7 +471,7 @@ function showCheck(){
   document.getElementById('checkScreen').classList.add('active');
 
   const titleEl = document.getElementById('modeTitle');
-  const weatherLabel = currentWeather === 'sunny' ? '☀ 晴れ' : '☂ 雨の可能性あり';
+  const weatherLabel = currentWeather === 'sunny' ? '☀ 晴れ' : ('☂ ' + getRainyLabel(currentMode));
   titleEl.textContent = meta.title + '(' + weatherLabel + ')';
   titleEl.className = 'mode-title ' + (currentMode === 'open' ? 'open-color' : 'close-color');
 
@@ -554,7 +559,7 @@ function updateProgress(){
 function buildText(){
   const meta = DATA[currentMode];
   const data = meta.weather[currentWeather];
-  const weatherLabel = currentWeather === 'sunny' ? '晴れ' : '雨の可能性あり';
+  const weatherLabel = currentWeather === 'sunny' ? '晴れ' : getRainyLabel(currentMode);
   const today = new Date();
   const dateLabel = (today.getMonth()+1) + '/' + today.getDate() + '(' + ['日','月','火','水','木','金','土'][today.getDay()] + ')';
   let lines = [];

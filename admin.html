@@ -176,6 +176,18 @@
     border-bottom:1px solid var(--line);
   }
   .item-block:last-child{border-bottom:none;}
+  .note-row{
+    margin-top:6px;
+  }
+  .note-row input{
+    width:100%;
+    padding:8px 8px;
+    font-size:12px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    color:#7A5A1E;
+    background:#FFFCF5;
+  }
   .photo-row{
     display:flex;
     gap:8px;
@@ -417,6 +429,9 @@ function renderItems(){
           '<input type="file" accept="image/*" onchange="handlePhotoSelect(' + i + ',this)">' +
         '</label>' +
         '<button class="photo-remove-btn ' + previewShow + '" id="removeBtn-' + i + '" onclick="removePhoto(' + i + ')" title="写真を削除">×</button>' +
+      '</div>' +
+      '<div class="note-row">' +
+        '<input type="text" value="' + escapeAttr(item.note || '') + '" placeholder="⚠ 注意事項(任意。例:油の交換は火曜のみ)" onchange="updateItem(' + i + ',\'note\',this.value)">' +
       '</div>';
     container.appendChild(block);
   });
@@ -515,7 +530,7 @@ function removeItem(i){
 function addItem(){
   const items = DATA[currentTab].weather[currentWeather].items;
   const lastNum = items.length ? items[items.length - 1].num : 0;
-  items.push({ num: lastNum + 1, label: '', detail: '', photo: '' });
+  items.push({ num: lastNum + 1, label: '', detail: '', photo: '', note: '' });
   renderItems();
 }
 

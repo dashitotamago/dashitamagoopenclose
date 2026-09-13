@@ -225,6 +225,19 @@
     border:1px solid var(--line);
     display:block;
   }
+  .item-note{
+    display:flex;
+    gap:6px;
+    background:#FFF4E5;
+    border:1px solid #EAC98A;
+    border-radius:8px;
+    padding:8px 10px;
+    margin:-2px 0 10px;
+    font-size:12px;
+    color:#7A5A1E;
+    line-height:1.5;
+  }
+  .item-note .icon{flex-shrink:0;}
 
   .final-confirm{
     display:flex;
@@ -412,8 +425,8 @@ async function init(){
     document.getElementById('loading').textContent = '読み込みに失敗しました。config.jsが正しく読み込まれているか確認してください。';
     return;
   }
-  document.getElementById('openDesc').textContent = '10:45まで';
-  document.getElementById('closeDesc').textContent = '天気を選んでチェック';
+  document.getElementById('openDesc').textContent = '打刻後15分以内';
+  document.getElementById('closeDesc').textContent = '閉店後30分以内';
   document.getElementById('loading').style.display = 'none';
   document.getElementById('selectScreen').classList.remove('hidden');
 }
@@ -470,6 +483,13 @@ function showCheck(){
       '<div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>' +
       '<div class="item-text"><span class="item-num">' + item.num + '.</span>' + displayText + '</div>';
     list.appendChild(el);
+
+    if(item.note){
+      const noteDiv = document.createElement('div');
+      noteDiv.className = 'item-note';
+      noteDiv.innerHTML = '<span class="icon">⚠️</span><span>' + escapeHtml(item.note) + '</span>';
+      list.appendChild(noteDiv);
+    }
 
     if(item.photo){
       const photoDiv = document.createElement('div');
@@ -589,6 +609,10 @@ function doCopy(){
   } else {
     fallbackCopy(text, showToast);
   }
+}
+
+function escapeHtml(str){
+  return (str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function fallbackCopy(text, cb){

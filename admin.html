@@ -369,6 +369,10 @@ function syncIdenticalPhotos(){
   });
 }
 
+function getRainyLabel(tab){
+  return tab === 'open' ? '雨が降っている場合' : '雨の可能性あり';
+}
+
 function switchTab(tab){
   currentTab = tab;
   currentWeather = 'sunny';
@@ -376,6 +380,7 @@ function switchTab(tab){
   document.getElementById('tabClose').classList.toggle('active', tab === 'close');
   document.getElementById('subtabSunny').classList.add('active');
   document.getElementById('subtabRainy').classList.remove('active');
+  document.getElementById('subtabRainy').textContent = '☂ ' + getRainyLabel(currentTab);
   renderTab();
 }
 
@@ -388,15 +393,17 @@ function switchWeather(weather){
 }
 
 function updateSyncButtonLabel(){
-  const from = currentWeather === 'sunny' ? '晴れ' : '雨の可能性あり';
-  const to = currentWeather === 'sunny' ? '雨の可能性あり' : '晴れ';
-  document.getElementById('syncPhotoBtn').textContent = '📷 ' + from + 'の写真を' + to + 'にも全く同じようにコピー';
+  const rainyLabel = getRainyLabel(currentTab);
+  const from = currentWeather === 'sunny' ? '晴れ' : rainyLabel;
+  const to = currentWeather === 'sunny' ? rainyLabel : '晴れ';
+  document.getElementById('syncPhotoBtn').textContent = '📋 ' + from + 'の項目・写真を' + to + 'にも全く同じようにコピー';
 }
 
 function renderTab(){
   const meta = DATA[currentTab];
   document.getElementById('headerInput').value = meta.header;
   document.getElementById('photoCountInput').value = meta.weather[currentWeather].photoCount;
+  document.getElementById('subtabRainy').textContent = '☂ ' + getRainyLabel(currentTab);
   updateSyncButtonLabel();
   renderItems();
 }
@@ -478,24 +485,22 @@ function removePhoto(i){
   document.getElementById('uploadLabel-' + i).firstChild.textContent = '＋ 写真を追加';
 }
 
-// 現在表示中の天気の写真を、番号や文章が違っていても、もう片方の天気の同じ順番の項目にすべて強制コピーする
+// 現在表示中の天気の項目(番号・場所・チェック内容・注意事項・写真)を、もう片方の天気に丸ごとコピーする
 function copyPhotosToOtherWeather(){
   const other = currentWeather === 'sunny' ? 'rainy' : 'sunny';
-  const fromLabel = currentWeather === 'sunny' ? '晴れ' : '雨の可能性あり';
-  const toLabel = other === 'sunny' ? '晴れ' : '雨の可能性あり';
+  const rainyLabel = getRainyLabel(currentTab);
+  const fromLabel = currentWeather === 'sunny' ? '晴れ' : rainyLabel;
+  const toLabel = other === 'sunny' ? '晴れ' : rainyLabel;
 
   const ok = confirm(
-    fromLabel + 'の写真を、番号や文章が違っていても、' + toLabel + '側の同じ順番の項目にすべてコピーします。\n' +
-    toLabel + '側にすでに設定されている写真は上書きされます。よろしいですか?'
+    fromLabel + 'の項目(番号・場所・チェック内容・注意事項・写真枚数・写真)を、' + toLabel + 'に丸ごとコピーします。\n' +
+    toLabel + '側の内容はすべて上書きされます。よろしいですか?'
   );
   if(!ok) return;
 
-  const currentItems = DATA[currentTab].weather[currentWeather].items;
-  const otherItems = DATA[currentTab].weather[other].items;
-  const len = Math.min(currentItems.length, otherItems.length);
-  for(let i = 0; i < len; i++){
-    otherItems[i].photo = currentItems[i].photo || '';
-  }
+  const currentWeatherData = DATA[currentTab].weather[currentWeather];
+  DATA[currentTab].weather[other].items = JSON.parse(JSON.stringify(currentWeatherData.items));
+  DATA[currentTab].weather[other].photoCount = currentWeatherData.photoCount;
 
   alert('コピーしました。画面下部の「保存する」を押すと反映されます。');
 }

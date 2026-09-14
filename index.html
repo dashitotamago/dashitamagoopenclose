@@ -336,7 +336,6 @@
   <h1>店舗チェックシート</h1>
   <p>写真チェック項目 / LINE報告用</p>
 </header>
-<a class="admin-link" href="admin.html">項目を編集する(管理サイト)</a>
 
 <div class="wrap">
 
@@ -411,6 +410,7 @@ let DATA = null;
 let currentMode = null;
 let currentWeather = null;
 let checkedState = {};
+let currentItems = [];
 let finalConfirmed1 = false;
 let finalConfirmed2 = false;
 
@@ -477,6 +477,7 @@ function showCheck(){
 
   const list = document.getElementById('itemList');
   list.innerHTML = '';
+  currentItems = data.items;
   data.items.forEach((item, i) => {
     checkedState[i] = false;
     const displayText = item.label ? (item.label + ' ' + item.detail) : item.detail;
@@ -513,7 +514,18 @@ function showCheck(){
 }
 
 function toggleItem(i){
-  checkedState[i] = !checkedState[i];
+  const willCheck = !checkedState[i];
+
+  if(willCheck){
+    const item = currentItems[i];
+    if(item.photoConfirm){
+      const displayText = item.label ? (item.label + ' ' + item.detail) : item.detail;
+      const ok = confirm('📸 「' + displayText + '」の写真は撮りましたか?\n\nまだの場合は「キャンセル」を押して、先に写真を撮ってください。');
+      if(!ok) return;
+    }
+  }
+
+  checkedState[i] = willCheck;
   const el = document.getElementById('item-' + i);
   el.classList.toggle('checked', checkedState[i]);
   updateProgress();

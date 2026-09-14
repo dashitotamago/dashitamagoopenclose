@@ -188,6 +188,20 @@
     color:#7A5A1E;
     background:#FFFCF5;
   }
+  .confirm-row{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-top:8px;
+    font-size:12px;
+    color:var(--sub);
+    cursor:pointer;
+  }
+  .confirm-row input{
+    flex-shrink:0;
+    width:15px;
+    height:15px;
+  }
   .photo-row{
     display:flex;
     gap:8px;
@@ -280,7 +294,6 @@
   <h1>チェックシート管理</h1>
   <p>項目の追加・編集・削除</p>
 </header>
-<a class="back-link" href="index.html">← チェックサイトに戻る</a>
 
 <div class="wrap">
   <div class="loading" id="loading">読み込み中...</div>
@@ -439,9 +452,17 @@ function renderItems(){
       '</div>' +
       '<div class="note-row">' +
         '<input type="text" value="' + escapeAttr(item.note || '') + '" placeholder="⚠ 注意事項(任意。例:油の交換は火曜のみ)" onchange="updateItem(' + i + ',\'note\',this.value)">' +
-      '</div>';
+      '</div>' +
+      '<label class="confirm-row">' +
+        '<input type="checkbox" ' + (item.photoConfirm ? 'checked' : '') + ' onchange="updatePhotoConfirm(' + i + ',this.checked)">' +
+        '<span>チェック時に「写真は撮りましたか?」の確認を出す</span>' +
+      '</label>';
     container.appendChild(block);
   });
+}
+
+function updatePhotoConfirm(i, checked){
+  DATA[currentTab].weather[currentWeather].items[i].photoConfirm = checked;
 }
 
 async function handlePhotoSelect(i, inputEl){
@@ -535,7 +556,7 @@ function removeItem(i){
 function addItem(){
   const items = DATA[currentTab].weather[currentWeather].items;
   const lastNum = items.length ? items[items.length - 1].num : 0;
-  items.push({ num: lastNum + 1, label: '', detail: '', photo: '', note: '' });
+  items.push({ num: lastNum + 1, label: '', detail: '', photo: '', note: '', photoConfirm: false });
   renderItems();
 }
 

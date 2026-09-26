@@ -202,6 +202,18 @@
     width:15px;
     height:15px;
   }
+  .both-save-btn{
+    width:100%;
+    margin-top:8px;
+    padding:7px;
+    border:1px solid #C9C6BA;
+    border-radius:7px;
+    background:#F3F1E9;
+    color:var(--ink);
+    font-size:11px;
+    font-weight:700;
+    cursor:pointer;
+  }
   .photo-row{
     display:flex;
     gap:8px;
@@ -442,6 +454,7 @@ function renderItems(){
           '<button class="icon-btn danger" onclick="removeItem(' + i + ')" title="削除">×</button>' +
         '</div>' +
       '</div>' +
+      '<button class="both-save-btn" onclick="saveItemToBothWeather(' + i + ')" title="この項目を晴れ・雨の両方に保存">☀☂ この項目を晴れ・雨 両方に保存</button>' +
       '<div class="photo-row">' +
         '<img class="photo-preview ' + previewShow + '" id="preview-' + i + '" src="' + photoVal + '">' +
         '<label class="photo-upload-btn" id="uploadLabel-' + i + '">' +
@@ -463,6 +476,21 @@ function renderItems(){
 
 function updatePhotoConfirm(i, checked){
   DATA[currentTab].weather[currentWeather].items[i].photoConfirm = checked;
+}
+
+// この項目(番号・場所・チェック内容・注意事項・写真・写真確認設定)を、晴れ・雨の同じ順番の項目に両方保存する
+function saveItemToBothWeather(i){
+  const other = currentWeather === 'sunny' ? 'rainy' : 'sunny';
+  const item = DATA[currentTab].weather[currentWeather].items[i];
+  const otherItems = DATA[currentTab].weather[other].items;
+
+  if(i < otherItems.length){
+    otherItems[i] = JSON.parse(JSON.stringify(item));
+  } else {
+    otherItems.push(JSON.parse(JSON.stringify(item)));
+  }
+
+  alert('晴れ・雨 両方にこの項目を保存しました。画面下部の「保存する」を押すと反映されます。');
 }
 
 async function handlePhotoSelect(i, inputEl){
